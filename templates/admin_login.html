@@ -1,0 +1,37 @@
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin • Login</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root{ --green:#22c55e; --green-2:#4ade80; --ink:#0f172a; --bg:#f0fdf4; }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:'Poppins',sans-serif;color:var(--ink);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(900px 400px at 50% -10%, rgba(34,197,94,.25), transparent 70%),linear-gradient(180deg, #ffffff, var(--bg));}
+    .card{width:min(520px, 94vw);background:#fff;padding:36px 32px;border-radius:22px;border:1px solid rgba(0,0,0,.06);box-shadow:0 14px 40px rgba(74,222,128,.28);text-align:center}
+    h1{margin:0 0 18px;font-size:1.8rem;letter-spacing:.2px}
+    .sub{margin:-6px 0 22px;color:#64748b;font-size:.95rem}
+    form{display:grid;gap:14px;margin-top:6px}
+    input, button{width:100%;height:48px;padding:12px 14px;border-radius:12px;border:1px solid #e2e8f0;font-size:1rem}
+    input{background:#f8fafc}
+    input:focus{outline:3px solid rgba(34,197,94,.25);border-color:#bbf7d0}
+    button{background:linear-gradient(90deg,var(--green),var(--green-2));color:#fff;font-weight:700;cursor:pointer;border:none;box-shadow:0 8px 20px rgba(74,222,128,.4);height:52px}
+    button:hover{filter:brightness(1.05);transform:translateY(-1px)}
+    .err{color:#dc2626;margin-top:10px;font-size:.95rem}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🎧 HaloRadio Admin</h1>
+    <div class="sub">Masuk untuk melihat & mengelola request lagu</div>
+    <form method="post">
+      <input type="text" name="username" placeholder="Username" autocomplete="username" required>
+      <input type="password" name="password" placeholder="Password" autocomplete="current-password" required>
+      <button type="submit">Masuk</button>
+    </form>
+    {% if error %}<div class="err">{{ error }}</div>{% endif %}
+  </div>
+</body>
+</html>
+

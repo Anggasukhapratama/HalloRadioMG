@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin • Request Lagu & Jadwal</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root{ --green:#22c55e; --green-2:#4ade80; --ink:#0f172a; --bg:#f0fdf4; }
+    *{box-sizing:border-box}
+    body{
+      margin:0;font-family:'Poppins',sans-serif;color:var(--ink);
+      min-height:100vh;display:flex;flex-direction:column;
+      background:radial-gradient(1000px 500px at 50% -10%, rgba(34,197,94,.25), transparent 70%),
+                 linear-gradient(180deg, #ffffff, var(--bg));
+    }
+    nav{
+      position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;
+      padding:16px 24px;background:rgba(255,255,255,.25);
+      backdrop-filter:blur(12px) saturate(160%);border-bottom:1px solid rgba(255,255,255,.2)
+    }
+    .brand{font-weight:700}
+    .badge{
+      display:inline-flex;align-items:center;gap:8px;
+      background:linear-gradient(90deg,var(--green),var(--green-2));
+      color:#fff;padding:8px 14px;border-radius:999px;font-weight:700;
+      box-shadow:0 0 10px rgba(74,222,128,.55)
+    }
+    .container{max-width:1100px;margin:20px auto;padding:0 20px;flex:1;width:100%}
+    .grid{display:grid;grid-template-columns:1fr;gap:18px}
+    .card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:16px}
+    .filter{margin:10px 0 18px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    select, button, input, textarea{padding:10px 12px;border:1px solid #e2e8f0;border-radius:10px;font-size:.95rem}
+    button{
+      background:linear-gradient(90deg,var(--green),var(--green-2));
+      color:#fff;font-weight:700;cursor:pointer;box-shadow:0 0 10px rgba(74,222,128,.55);border:none
+    }
+    table{width:100%;border-collapse:separate;border-spacing:0 10px}
+    th, td{padding:12px 14px;text-align:left;background:#fff;vertical-align:top}
+    th{color:#065f46;background:#e8fff2;border-top-left-radius:12px;border-top-right-radius:12px}
+    tr td:first-child{border-top-left-radius:12px;border-bottom-left-radius:12px}
+    tr td:last-child{border-top-right-radius:12px;border-bottom-right-radius:12px}
+    .status{padding:6px 10px;border-radius:999px;font-weight:700;font-size:.85rem;background:#f1f5f9;color:#0f172a}
+    .s-new{background:#dcfce7;color:#166534}
+    .s-prog{background:#fef9c3;color:#854d0e}
+    .s-done{background:#e2e8f0;color:#475569}
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media (max-width: 900px){ .two-col{grid-template-columns:1fr} }
+
+    /* ====== FORM STYLE ====== */
+    .two-col > div label{display:block;margin:0 0 6px;font-weight:700;color:#065f46}
+    input[type="text"], input[type="datetime-local"], textarea, select{
+      width:100%; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px;
+      font-size:1rem; padding:12px 14px; box-sizing:border-box;
+    }
+    input[type="text"], input[type="datetime-local"]{ height:48px; }
+    textarea{ min-height:90px; resize:vertical; }
+    input:focus, textarea:focus, select:focus{outline:3px solid rgba(34,197,94,.25); border-color:#bbf7d0}
+    input::placeholder, textarea::placeholder{ color:#94a3b8; }
+    .hint{ display:block; margin-top:6px; color:#64748b; font-size:.85rem; }
+
+    /* kecilkan button di dalam tabel */
+    table button{ padding:8px 10px; border:none; border-radius:10px; }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="brand">🎧 HaloRadio • Admin</div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <div class="badge">🔔 <span id="newCount">0</span> Request Baru</div>
+      <a href="/admin/logout" style="text-decoration:none;color:#0f172a;font-weight:700">Logout</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="grid">
+
+      <!-- Daftar Request -->
+      <div class="card">
+        <h3 style="margin-top:0">📩 Daftar Request Lagu</h3>
+        <div class="filter">
+          <label for="fstatus">Filter status:</label>
+          <select id="fstatus">
+            <option value="">Semua</option>
+            <option value="New">New</option>
+            <option value="In-Progress">In-Progress</option>
+            <option value="Done">Done</option>
+          </select>
+          <button id="refreshBtn">Refresh</button>
+        </div>
+        <table id="tbl">
+          <thead>
+            <tr>
+              <th style="width:260px">ID</th>
+              <th style="width:160px">Nama</th>
+              <th>Judul Lagu</th>
+              <th style="width:170px">Waktu</th>
+              <th style="width:150px">Status</th>
+              <th style="width:220px">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+
+      <!-- Kelola Jadwal -->
+      <div class="card">
+        <h3 style="margin-top:0">🗓️ Kelola Jadwal Siaran</h3>
+        <div class="two-col">
+          <div>
+            <label>Judul Program</label>
+            <input id="schTitle" placeholder="Contoh: Morning Vibes"/>
+          </div>
+          <div>
+            <label>Penyiar / Host</label>
+            <input id="schHost" placeholder="Contoh: DJ Angga"/>
+          </div>
+          <div class="two-col" style="grid-column:1/-1">
+            <div>
+              <label>Mulai (lokal)</label>
+              <input id="schStart" type="datetime-local" />
+              <small class="hint">Format mengikuti zona waktu browser (contoh: 25/08/2025 08:30)</small>
+            </div>
+            <div>
+              <label>Selesai (lokal)</label>
+              <input id="schEnd" type="datetime-local" />
+              <small class="hint">Pastikan lebih besar dari waktu mulai</small>
+            </div>
+          </div>
+          <div style="grid-column:1/-1">
+            <label>Deskripsi</label>
+            <textarea id="schDesc" rows="3" placeholder="Apa isi programnya?"></textarea>
+          </div>
+        </div>
+        <div style="margin-top:10px;display:flex;gap:10px">
+          <button id="btnAddSch">Tambah Jadwal</button>
+          <button id="btnReloadSch">Muat Ulang</button>
+        </div>
+        <div style="margin-top:12px">
+          <table style="width:100%">
+            <thead>
+              <tr>
+                <th>Waktu</th>
+                <th>Program</th>
+                <th>Host</th>
+                <th>Deskripsi</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="schBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Monitor Chat -->
+      <div class="card">
+        <h3 style="margin-top:0">💬 Monitor Chat</h3>
+        <div class="filter">
+          <label><input type="checkbox" id="chatFlagOnly"> Tampilkan yang di-flag</label>
+          <button id="chatReload">Muat Ulang</button>
+        </div>
+        <table style="width:100%">
+          <thead>
+            <tr>
+              <th style="width:160px">Waktu</th>
+              <th style="width:160px">Nama</th>
+              <th>Pesan</th>
+              <th style="width:140px">IP</th>
+              <th style="width:120px">Flag</th>
+              <th style="width:120px">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="chatBody"></tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+  <footer style="padding:16px;text-align:center;color:#64748b">© 2025 HaloRadio</footer>
+
+  <script>
+    // ========= Request Lagu =========
+    const tbody = document.getElementById('tbody');
+    const fstatus = document.getElementById('fstatus');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const newCountEl = document.getElementById('newCount');
+
+    function pill(status){
+      if(status === 'New') return '<span class="status s-new">New</span>';
+      if(status === 'In-Progress') return '<span class="status s-prog">In-Progress</span>';
+      return '<span class="status s-done">Done</span>';
+    }
+
+    async function loadCount(){
+      try{
+        const r = await fetch('/api/admin/requests/new_count');
+        const j = await r.json();
+        newCountEl.textContent = j.count ?? 0;
+      }catch{ newCountEl.textContent = '0'; }
+    }
+
+    async function loadData(){
+      const qs = fstatus.value ? ('?status=' + encodeURIComponent(fstatus.value)) : '';
+      const res = await fetch('/api/admin/requests' + qs);
+      const data = await res.json();
+      tbody.innerHTML = '';
+      (data.items || []).forEach(item => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="font-family:monospace">${item._id}</td>
+          <td>${item.name}</td>
+          <td>${item.title}</td>
+          <td>${new Date(item.created_at).toLocaleString()}</td>
+          <td>${pill(item.status)}</td>
+          <td>
+            <button onclick="setStatus('${item._id}', 'New')">Set New</button>
+            <button onclick="setStatus('${item._id}', 'In-Progress')">In-Progress</button>
+            <button onclick="setStatus('${item._id}', 'Done')">Done</button>
+          </td>`;
+        tbody.appendChild(tr);
+      });
+      loadCount();
+    }
+
+    async function setStatus(id, status){
+      await fetch('/api/admin/requests/' + id + '/status', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({status})
+      });
+      loadData();
+    }
+
+    fstatus.addEventListener('change', loadData);
+    refreshBtn.addEventListener('click', loadData);
+
+    loadData();
+    setInterval(() => { loadCount(); if(!fstatus.value || fstatus.value === 'New'){ loadData(); } }, 5000);
+
+    // ========= Jadwal Admin =========
+    const schTitle = document.getElementById('schTitle');
+    const schHost  = document.getElementById('schHost');
+    const schStart = document.getElementById('schStart');
+    const schEnd   = document.getElementById('schEnd');
+    const schDesc  = document.getElementById('schDesc');
+    const schBody  = document.getElementById('schBody');
+    const btnAddSch = document.getElementById('btnAddSch');
+    const btnReloadSch = document.getElementById('btnReloadSch');
+
+    function toUTCISO(localStr){
+      if(!localStr) return null;
+      return new Date(localStr).toISOString(); // JS otomatis ubah dari lokal -> UTC
+    }
+
+
+    function fmtRange(st, et){
+      const s = new Date(st), e = new Date(et);
+      return `${s.toLocaleDateString()} ${s.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})} – ${e.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`
+    }
+
+    async function addSchedule(){
+      const startISO = toUTCISO(schStart.value);
+      const endISO   = toUTCISO(schEnd.value);
+
+      if(!schTitle.value.trim()){ alert('Judul program wajib diisi'); return; }
+      if(!startISO || !endISO){ alert('Waktu mulai & selesai wajib diisi'); return; }
+      if(new Date(endISO) <= new Date(startISO)){ alert('Waktu selesai harus setelah waktu mulai'); return; }
+
+      const payload = {
+        title: schTitle.value.trim(),
+        host: schHost.value.trim(),
+        description: schDesc.value.trim(),
+        start_time: startISO,
+        end_time: endISO
+      };
+
+      const r = await fetch('/api/admin/schedules', {
+        method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)
+      });
+      const j = await r.json();
+      if(!j.ok){ alert(j.error||'Gagal menyimpan'); return; }
+      schTitle.value = schHost.value = schDesc.value = '';
+      schStart.value = schEnd.value = '';
+      await loadSchedules();
+    }
+
+    async function loadSchedules(){
+      const r = await fetch('/api/admin/schedules');
+      const j = await r.json();
+      schBody.innerHTML = '';
+      (j.items||[]).forEach(it => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${fmtRange(it.start_time, it.end_time)}</td>
+                        <td>${it.title}</td>
+                        <td>${it.host||''}</td>
+                        <td>${it.description||''}</td>
+                        <td><button data-del="${it._id}">Hapus</button></td>`;
+        tr.querySelector('[data-del]').addEventListener('click', async (e)=>{
+          const id = e.currentTarget.getAttribute('data-del');
+          if(confirm('Hapus jadwal ini?')){
+            const r = await fetch('/api/admin/schedules/'+id, {method:'DELETE'});
+            const j = await r.json();
+            if(!j.ok){ alert(j.error||'Gagal hapus'); }
+            loadSchedules();
+          }
+        });
+        schBody.appendChild(tr);
+      });
+    }
+
+    btnAddSch.addEventListener('click', addSchedule);
+    btnReloadSch.addEventListener('click', loadSchedules);
+    loadSchedules();
+
+    // ========= Monitor Chat (Admin) =========
+    const chatBody = document.getElementById('chatBody');
+    const chatReload = document.getElementById('chatReload');
+    const chatFlagOnly = document.getElementById('chatFlagOnly');
+
+    function escapeHtmlAdmin(s){
+      return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    }
+
+    async function loadChatList(){
+      const qs = chatFlagOnly.checked ? '?flagged=1&limit=200' : '?limit=200';
+      const r = await fetch('/api/admin/chat'+qs);
+      const j = await r.json();
+      chatBody.innerHTML = '';
+      (j.items||[]).forEach(it=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${new Date(it.ts).toLocaleString()}</td>
+          <td>${escapeHtmlAdmin(it.name)}</td>
+          <td>${escapeHtmlAdmin(it.text)}</td>
+          <td>${escapeHtmlAdmin(it.ip||'-')}</td>
+          <td>${it.flagged ? '<span class="status s-prog">Flagged</span>' : '-'}</td>
+          <td><button data-del="${it._id}">Hapus</button></td>`;
+        tr.querySelector('[data-del]').addEventListener('click', async (e)=>{
+          const id = e.currentTarget.getAttribute('data-del');
+          if(confirm('Hapus pesan ini?')){
+            const r = await fetch('/api/admin/chat/'+id, {method:'DELETE'});
+            const j = await r.json();
+            if(!j.ok){ alert(j.error||'Gagal hapus'); }
+            loadChatList();
+          }
+        });
+        chatBody.appendChild(tr);
+      });
+    }
+    chatReload.addEventListener('click', loadChatList);
+    chatFlagOnly.addEventListener('change', loadChatList);
+    setInterval(loadChatList, 5000);
+    loadChatList();
+  </script>
+</body>
+</html>

@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HaloRadio • Siaran</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root{ --green:#22c55e; --green-2:#4ade80; --ink:#0f172a; --bg:#f0fdf4; --panel:#ffffff; --soft:#f8fafc; }
+    *{box-sizing:border-box}
+    body{
+      margin:0;font-family:'Poppins',sans-serif;color:var(--ink);
+      background:radial-gradient(1000px 500px at 50% -10%, rgba(34,197,94,.25), transparent 70%),linear-gradient(180deg,#ffffff,var(--bg));
+      min-height:100vh;display:flex;flex-direction:column
+    }
+    nav{position:fixed;top:0;left:0;right:0;display:flex;justify-content:center;align-items:center;padding:18px 28px;background:rgba(255,255,255,.28);backdrop-filter:blur(12px) saturate(160%);border-bottom:1px solid rgba(255,255,255,.22);z-index:1000}
+    nav h1{margin:0;font-size:1.6rem;font-weight:700;text-shadow:0 0 8px rgba(74,222,128,.7)}
+    .container{flex:1;padding:120px 32px 24px;max-width:1200px;margin:auto}
+    .grid{display:grid;grid-template-columns: 1.75fr 1fr;gap:28px}
+    @media (max-width: 980px){ .grid{grid-template-columns:1fr} }
+    .panel{background:var(--panel);padding:36px;border-radius:24px;border:1px solid rgba(0,0,0,.06);box-shadow:0 14px 40px rgba(74,222,128,.22)}
+    .radio-player .status{margin:2px auto 18px;padding:12px 28px;border-radius:999px;font-weight:700;background:#eef2f7;color:#64748b;display:inline-block;letter-spacing:.3px}
+    .radio-player .status.online{background:var(--green);color:#fff;box-shadow:0 0 12px var(--green-2);animation:pulse 2s infinite}
+    @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(74,222,128,.65)}70%{box-shadow:0 0 0 16px rgba(74,222,128,0)}100%{box-shadow:0 0 0 0 rgba(74,222,128,0)}}
+    .info{margin:8px 0;font-size:1rem;font-weight:500;color:#065f46}
+    .info span{font-weight:800;color:var(--green);text-shadow:0 0 6px rgba(74,222,128,.5)}
+    .audio-wrap{margin-top:20px;padding:14px;border-radius:16px;background:var(--soft);border:1px solid #e2e8f0;box-shadow:inset 0 0 0 1px rgba(255,255,255,.6), 0 6px 16px rgba(74,222,128,.18)}
+    audio{width:100%;display:block;border-radius:12px}
+
+    .card h3{margin:0 0 14px;color:var(--green);text-shadow:0 0 6px rgba(74,222,128,.6)}
+    .request-form{display:grid;gap:12px}
+    .request-form input, .request-form button{height:48px;border-radius:12px;border:1px solid #e2e8f0;font-size:1rem;padding:12px 14px}
+    .request-form input{background:#f8fafc}
+    .request-form input:focus{outline:3px solid rgba(34,197,94,.25);border-color:#bbf7d0}
+    .request-form button{height:52px;background:linear-gradient(90deg,var(--green),var(--green-2));color:#fff;font-weight:800;border:none;cursor:pointer;box-shadow:0 8px 20px rgba(74,222,128,.4)}
+    .msg{font-size:.92rem;margin-top:4px}
+    .msg.ok{color:#16a34a}.msg.err{color:#dc2626}
+
+    /* Jadwal */
+    .schedule{display:grid;gap:12px;margin-top:18px}
+    .sch-item{display:flex;gap:12px;align-items:flex-start;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:12px}
+    .sch-time{font-weight:800;color:#065f46;min-width:120px}
+    .sch-title{font-weight:700}
+
+    /* Deezer */
+    .deezer-box{margin-top:16px}
+    .deezer-box input{
+      width:100%;height:48px;padding:12px 14px;border-radius:12px;border:1px solid #e2e8f0;font-size:1rem;background:#f8fafc;margin-top:6px
+    }
+    .deezer-box input:focus{outline:3px solid rgba(34,197,94,.25);border-color:#bbf7d0}
+    .deezer-box input::placeholder{color:#94a3b8}
+    .dz-list{display:grid;gap:10px;max-height:320px;overflow:auto;margin-top:8px}
+    .dz-item{display:grid;grid-template-columns:56px 1fr auto;gap:12px;align-items:center;background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:8px}
+    .dz-item img{width:56px;height:56px;border-radius:8px;object-fit:cover}
+    .dz-meta{font-size:.92rem}
+    .dz-meta .t{font-weight:700}
+    .dz-actions button{padding:8px 10px;border:none;border-radius:10px;background:linear-gradient(90deg,var(--green),var(--green-2));color:#fff;font-weight:700;cursor:pointer}
+
+    /* Floating Chat */
+    .chat-fab{
+      position:fixed; right:20px; bottom:20px; width:56px; height:56px; border-radius:50%; border:none; cursor:pointer;
+      background:linear-gradient(90deg,var(--green),var(--green-2)); color:#fff; font-size:24px; box-shadow:0 10px 24px rgba(0,0,0,.2); z-index:1100;
+    }
+    .chat-panel{
+      position:fixed; right:20px; bottom:86px; width:min(360px, 92vw);
+      background:#fff; border:1px solid #e2e8f0; border-radius:16px; box-shadow:0 16px 40px rgba(0,0,0,.2);
+      overflow:hidden; display:none; z-index:1100;
+    }
+    .chat-header{
+      display:flex; align-items:center; justify-content:space-between; padding:12px 14px;
+      background:linear-gradient(90deg,var(--green),var(--green-2)); color:#fff; font-weight:800;
+    }
+    .chat-header button{ background:transparent; border:none; color:#fff; font-size:20px; cursor:pointer }
+    .chat-body{ display:flex; flex-direction:column; height:360px; }
+    .chat-messages{ flex:1; padding:12px; overflow:auto; background:#f8fafc; border-bottom:1px solid #e2e8f0; }
+    .chat-msg{ margin:8px 0; }
+    .chat-msg .meta{ font-size:.8rem; color:#64748b }
+    .chat-input{ display:grid; grid-template-columns:1fr; gap:8px; padding:12px; background:#fff; }
+    .chat-input input, .chat-input textarea, .chat-input button{
+      border:1px solid #e2e8f0; border-radius:10px; font-size:.95rem; padding:10px 12px;
+    }
+    .chat-input input, .chat-input textarea{ background:#f8fafc }
+    .chat-input textarea{ resize:none; height:64px }
+    .chat-input button{ background:linear-gradient(90deg,var(--green),var(--green-2)); color:#fff; font-weight:700; cursor:pointer; border:none; }
+    .chat-empty{ color:#94a3b8; font-size:.92rem; text-align:center; padding:8px 0 }
+  </style>
+</head>
+<body>
+  <nav><h1>🎧 HaloRadio</h1></nav>
+
+  <div class="container">
+    <div class="grid">
+      <!-- Player -->
+      <section class="panel radio-player">
+        <div id="broadcast-status" class="status">STATUS: OFFLINE</div>
+        <div class="info">👥 Pendengar aktif: <span id="listener-count">0</span></div>
+        <div class="info">🎵 Sedang diputar: <span id="current-song">-</span></div>
+
+        <div class="audio-wrap">
+          <audio id="radio-player" controls>
+            <source src="/stream" type="audio/mpeg">
+          </audio>
+        </div>
+
+        <div style="margin-top:18px">
+          <h3 style="margin:0 0 10px;color:#065f46">📅 Jadwal Sedang Berlangsung</h3>
+          <div id="nowBox" class="sch-item" style="display:none">
+            <div class="sch-time" id="nowTime"></div>
+            <div>
+              <div class="sch-title" id="nowTitle"></div>
+              <div id="nowHost"></div>
+              <div id="nowDesc" style="color:#475569"></div>
+            </div>
+          </div>
+          <div id="noNow" style="color:#64748b">Tidak ada program yang berlangsung saat ini.</div>
+        </div>
+      </section>
+
+      <!-- Request + Deezer + Chat FAB lives outside -->
+      <aside class="panel card">
+        <h3>📩 Request Lagu</h3>
+        <form class="request-form" id="reqForm">
+          <input id="reqName" type="text" placeholder="Nama Anda" required>
+          <input id="reqTitle" type="text" placeholder="Judul Lagu" required>
+          <button type="submit">Kirim Request</button>
+          <div id="reqMsg" class="msg"></div>
+        </form>
+
+        <div class="deezer-box">
+          <h3 style="margin-top:18px">🔍 Cari & Preview (Deezer)</h3>
+          <input id="dzQuery" type="text" placeholder="Cari judul/artist…" />
+          <div class="dz-list" id="dzList"></div>
+          <div class="audio-wrap" style="margin-top:10px">
+            <audio id="dzPreview" controls></audio>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <section class="panel" style="margin-top:24px">
+      <h3 style="margin:0 0 12px;color:#065f46">🗓️ Jadwal Mendatang</h3>
+      <div id="upcoming" class="schedule"></div>
+    </section>
+  </div>
+
+  <!-- Floating Chat -->
+  <button class="chat-fab" id="chatFab" aria-label="Buka Chat">💬</button>
+  <div class="chat-panel" id="chatPanel" role="dialog" aria-label="Chat Global">
+    <div class="chat-header">
+      <div>💬 Chat Global</div>
+      <button id="chatClose" aria-label="Tutup">×</button>
+    </div>
+    <div class="chat-body">
+      <div class="chat-messages" id="chatMessages">
+        <div class="chat-empty" id="chatEmpty">Belum ada pesan…</div>
+      </div>
+      <div class="chat-input">
+        <input id="chatName" type="text" placeholder="Nama (opsional)" />
+        <textarea id="chatText" placeholder="Tulis pesan…"></textarea>
+        <button id="chatSend">Kirim</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer-wrap" style="width:min(1200px,94vw);margin:44px auto 28px;padding:18px 24px;background:#0f172a;color:#cbd5e1;border-radius:16px;box-shadow:0 8px 20px rgba(15,23,42,.25);text-align:center">
+    © 2025 HaloRadio • Dibuat dengan Flask, Mixxx, Icecast & MongoDB
+  </footer>
+
+  <script>
+    // ===== Player Status & Stats =====
+    const player = document.getElementById('radio-player');
+    const statusDiv = document.getElementById('broadcast-status');
+    const listenerCount = document.getElementById('listener-count');
+    const currentSong = document.getElementById('current-song');
+
+    function setStatus(txt, online=false){
+      statusDiv.textContent = txt;
+      statusDiv.classList.toggle('online', online);
+    }
+    player.addEventListener('play',  () => setStatus('STATUS: MENGUDARA ▶️', true));
+    player.addEventListener('pause', () => setStatus('STATUS: OFFLINE ⏹️', false));
+    player.addEventListener('error', () => setStatus('STATUS: GAGAL TERHUBUNG', false));
+
+    async function fetchStats() {
+      try {
+        const res = await fetch('/stats', { cache: 'no-store' });
+        const data = await res.json();
+        listenerCount.textContent = data.listeners ?? 0;
+        currentSong.textContent = data.now_playing || '-';
+      } catch {
+        listenerCount.textContent = '0';
+        currentSong.textContent = '-';
+      }
+    }
+    fetchStats(); setInterval(fetchStats, 5000);
+
+    // ===== Request Lagu =====
+    const form = document.getElementById('reqForm');
+    const nameEl = document.getElementById('reqName');
+    const titleEl = document.getElementById('reqTitle');
+    const msgEl = document.getElementById('reqMsg');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault(); msgEl.textContent=''; msgEl.className='msg';
+      const payload = { name: nameEl.value.trim(), title: titleEl.value.trim() };
+      if (!payload.name || !payload.title){ msgEl.textContent='Nama & Judul wajib diisi.'; msgEl.classList.add('err'); return; }
+      try {
+        const r = await fetch('/api/request_song', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
+        const j = await r.json();
+        if(j.ok){ msgEl.textContent='Terima kasih! Request kamu sudah dikirim.'; msgEl.classList.add('ok'); form.reset(); }
+        else { throw new Error(j.error||'Gagal mengirim.'); }
+      } catch(err){ msgEl.textContent = err.message || 'Terjadi kesalahan.'; msgEl.classList.add('err'); }
+    });
+
+    // ===== Jadwal (public) =====
+    const nowBox = document.getElementById('nowBox');
+    const noNow = document.getElementById('noNow');
+    const nowTitle = document.getElementById('nowTitle');
+    const nowHost = document.getElementById('nowHost');
+    const nowDesc = document.getElementById('nowDesc');
+    const nowTime = document.getElementById('nowTime');
+    const upcomingEl = document.getElementById('upcoming');
+
+    function fmtTimeRange(stISO, etISO){
+      const st = new Date(stISO); const et = new Date(etISO);
+      const sameDay = st.toDateString() === et.toDateString();
+      const d = st.toLocaleDateString(undefined,{weekday:'short', year:'numeric', month:'short', day:'numeric'});
+      const t1 = st.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});
+      const t2 = et.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});
+      return sameDay ? `${d} • ${t1}–${t2}` : `${d} ${t1} → ${et.toLocaleDateString()} ${t2}`;
+    }
+
+    async function loadNow(){
+      const r = await fetch('/api/schedules/now');
+      const j = await r.json();
+      if(j.item){
+        nowBox.style.display='flex'; noNow.style.display='none';
+        nowTitle.textContent = j.item.title || '-';
+        nowHost.textContent = j.item.host ? `🎙️ ${j.item.host}` : '';
+        nowDesc.textContent = j.item.description || '';
+        nowTime.textContent = fmtTimeRange(j.item.start_time, j.item.end_time);
+      }else{
+        nowBox.style.display='none'; noNow.style.display='block';
+      }
+    }
+
+    async function loadUpcoming(){
+      const r = await fetch('/api/schedules/upcoming?limit=8');
+      const j = await r.json();
+      upcomingEl.innerHTML = '';
+      (j.items||[]).forEach(it => {
+        const div = document.createElement('div');
+        div.className = 'sch-item';
+        div.innerHTML = `<div class="sch-time">${fmtTimeRange(it.start_time, it.end_time)}</div>
+                         <div><div class="sch-title">${it.title}</div>
+                         <div>${it.host ? '🎙️ '+it.host : ''}</div>
+                         <div style="color:#475569">${it.description||''}</div></div>`;
+        upcomingEl.appendChild(div);
+      });
+    }
+
+    loadNow(); loadUpcoming(); setInterval(()=>{loadNow(); loadUpcoming();}, 30000);
+
+    // ===== Deezer Search & Preview =====
+    const dzQuery = document.getElementById('dzQuery');
+    const dzList = document.getElementById('dzList');
+    const dzPreview = document.getElementById('dzPreview');
+    let dzTimer;
+
+    function pickSong(title){
+      titleEl.value = title; titleEl.focus();
+    }
+
+    function renderResults(arr){
+      dzList.innerHTML = '';
+      (arr||[]).forEach(it => {
+        const row = document.createElement('div');
+        row.className = 'dz-item';
+        row.innerHTML = `
+          <img src="${it.cover||''}" alt="cover"/>
+          <div class="dz-meta">
+            <div class="t">${it.title || '-'}</div>
+            <div>${it.artist || ''} • ${it.album || ''}</div>
+          </div>
+          <div class="dz-actions">
+            <button data-prev="${it.preview||''}">Preview</button>
+            <button data-pick="${(it.title||'')+(it.artist?(' - '+it.artist):'')}">Pilih</button>
+          </div>`;
+        row.querySelector('[data-prev]').addEventListener('click', (e)=>{
+          const url = e.currentTarget.getAttribute('data-prev');
+          if(url){ dzPreview.src = url; dzPreview.play(); }
+        });
+        row.querySelector('[data-pick]').addEventListener('click', (e)=>{
+          const t = e.currentTarget.getAttribute('data-pick'); pickSong(t);
+        });
+        dzList.appendChild(row);
+      });
+    }
+
+    async function doSearch(q){
+      if(!q){ renderResults([]); return; }
+      const r = await fetch('/api/music/search?q='+encodeURIComponent(q));
+      const j = await r.json();
+      renderResults(j.data||[]);
+    }
+
+    dzQuery.addEventListener('input', ()=>{
+      clearTimeout(dzTimer);
+      dzTimer = setTimeout(()=> doSearch(dzQuery.value.trim()), 400);
+    });
+
+    // ===== Floating Chat (terhubung backend) =====
+    const fab   = document.getElementById('chatFab');
+    const panel = document.getElementById('chatPanel');
+    const closeBtn = document.getElementById('chatClose');
+    const list  = document.getElementById('chatMessages');
+    const empty = document.getElementById('chatEmpty');
+    const nameI = document.getElementById('chatName');
+    const textI = document.getElementById('chatText');
+    const sendB = document.getElementById('chatSend');
+
+    let lastISO = '';
+    let poller  = null;
+
+    function showPanel(show){
+      panel.style.display = show ? 'block' : 'none';
+      if(show){
+        startPolling();
+        setTimeout(()=> list.scrollTop = list.scrollHeight, 50);
+      }else{
+        stopPolling();
+      }
+    }
+    fab.addEventListener('click', ()=> showPanel(true));
+    closeBtn.addEventListener('click', ()=> showPanel(false));
+
+    function escapeHtml(s){
+      return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
+    }
+
+    function render(items){
+      if(!items || !items.length){ if(!list.children.length) empty.style.display='block'; return; }
+      empty.style.display='none';
+      items.forEach(it=>{
+        const div = document.createElement('div');
+        div.className = 'chat-msg';
+        const when = new Date(it.ts || Date.now());
+        div.innerHTML = `
+          <div class="meta">${escapeHtml(it.name||'Anon')} • ${when.toLocaleString()}</div>
+          <div class="text">${escapeHtml(it.text||'')}</div>`;
+        list.appendChild(div);
+      });
+      list.scrollTop = list.scrollHeight;
+    }
+
+    async function fetchNew(){
+      try{
+        const url = lastISO ? `/api/chat/messages?since=${encodeURIComponent(lastISO)}` : '/api/chat/messages';
+        const r = await fetch(url, {cache:'no-store'});
+        const j = await r.json();
+        if(j.ok){
+          const arr = j.items||[];
+          render(arr);
+          if(arr.length){
+            lastISO = arr[arr.length-1].ts;
+          }
+        }
+      }catch(e){ /* diam */ }
+    }
+
+    function startPolling(){ if(poller) return; fetchNew(); poller = setInterval(fetchNew, 2500); }
+    function stopPolling(){ if(poller){ clearInterval(poller); poller = null; } }
+
+    sendB.addEventListener('click', async ()=>{
+      const text = textI.value.trim();
+      const name = nameI.value.trim();
+      if(!text){ textI.focus(); return; }
+      try{
+        const r = await fetch('/api/chat/send', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ name, text })
+        });
+        const j = await r.json();
+        if(j.ok){
+          textI.value = '';
+          fetchNew();
+        }else{
+          alert(j.error || 'Gagal mengirim pesan');
+        }
+      }catch(e){
+        alert('Gagal mengirim pesan');
+      }
+    });
+
+    textI.addEventListener('keydown', (e)=>{
+      if((e.ctrlKey || e.metaKey) && e.key === 'Enter'){ sendB.click(); }
+    });
+  </script>
+</body>
+</html>

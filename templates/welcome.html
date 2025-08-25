@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Selamat Datang • HaloRadio</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap');
+
+    :root{
+      --green:#15803d;   /* hijau tua */
+      --green-2:#16a34a; /* hijau sekunder */
+      --ink:#0f172a;
+      --bg:#f7fafc;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      font-family:'Poppins',sans-serif;
+      margin:0;
+      display:flex;align-items:center;justify-content:center;
+      background:
+        radial-gradient(1200px 520px at 50% -10%, rgba(22,163,74,.16), transparent 60%),
+        linear-gradient(180deg, #ffffff, var(--bg));
+      color:var(--ink);
+    }
+
+    .welcome{
+      width:min(560px,92vw);
+      text-align:center;
+      padding:48px 36px;
+      border-radius:24px;
+      background:rgba(255,255,255,.9);
+      backdrop-filter:saturate(140%) blur(8px);
+      border:1px solid rgba(0,0,0,.06);
+      box-shadow:
+        0 10px 30px rgba(0,0,0,.06),
+        0 0 0 6px rgba(21,128,61,.08),
+        inset 0 0 70px rgba(21,128,61,.08);
+      animation:pop .4s ease-out both;
+    }
+
+    .brand{
+      display:inline-flex;gap:10px;align-items:center;justify-content:center;
+      padding:10px 16px;border-radius:999px;
+      background:rgba(21,128,61,.10);
+      color:var(--ink);font-weight:700;letter-spacing:.3px
+    }
+
+    h1{margin:14px 0 8px;font-size:2.1rem;line-height:1.2}
+    p{margin:0 0 28px;color:#475569}
+
+    .cta{
+      display:inline-block;
+      text-decoration:none;
+      background:linear-gradient(90deg,var(--green),var(--green-2));
+      color:#fff;font-weight:700;
+      padding:14px 34px;border-radius:999px;
+      box-shadow:0 8px 20px rgba(21,128,61,.35);
+      transition:transform .2s ease, box-shadow .3s ease, filter .2s ease;
+    }
+    .cta:hover{
+      transform:translateY(-1px);
+      box-shadow:0 12px 26px rgba(21,128,61,.45), 0 0 20px rgba(21,128,61,.35);
+      filter:saturate(110%);
+    }
+
+    .sub{margin-top:18px;font-size:.9rem;color:#64748b}
+
+    @keyframes pop{from{transform:scale(.98);opacity:.0}to{transform:scale(1);opacity:1}}
+  </style>
+</head>
+<body>
+  <div class="welcome">
+    <div class="brand">🎧 HaloRadio</div>
+    <h1>Selamat datang!</h1>
+    <p>Dengarkan siaran langsung dari studio dan stasiun favorit Indonesia.</p>
+    <a class="cta" href="/radio">MASUK KE SIARAN</a>
+    <div class="sub">Powered by Flask • Icecast • Mixxx • Ngrok</div>
+  </div>
+</body>
+</html>
