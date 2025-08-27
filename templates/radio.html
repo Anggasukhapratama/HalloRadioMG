@@ -37,19 +37,16 @@
     .msg{font-size:.92rem;margin-top:4px}
     .msg.ok{color:#16a34a}.msg.err{color:#dc2626}
 
-    /* Jadwal */
     .schedule{display:grid;gap:12px;margin-top:18px}
     .sch-item{display:flex;gap:12px;align-items:flex-start;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:12px}
     .sch-time{font-weight:800;color:#065f46;min-width:120px}
     .sch-title{font-weight:700}
 
-    /* Deezer */
     .deezer-box{margin-top:16px}
     .deezer-box input{
       width:100%;height:48px;padding:12px 14px;border-radius:12px;border:1px solid #e2e8f0;font-size:1rem;background:#f8fafc;margin-top:6px
     }
     .deezer-box input:focus{outline:3px solid rgba(34,197,94,.25);border-color:#bbf7d0}
-    .deezer-box input::placeholder{color:#94a3b8}
     .dz-list{display:grid;gap:10px;max-height:320px;overflow:auto;margin-top:8px}
     .dz-item{display:grid;grid-template-columns:56px 1fr auto;gap:12px;align-items:center;background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:8px}
     .dz-item img{width:56px;height:56px;border-radius:8px;object-fit:cover}
@@ -57,7 +54,6 @@
     .dz-meta .t{font-weight:700}
     .dz-actions button{padding:8px 10px;border:none;border-radius:10px;background:linear-gradient(90deg,var(--green),var(--green-2));color:#fff;font-weight:700;cursor:pointer}
 
-    /* Floating Chat */
     .chat-fab{
       position:fixed; right:20px; bottom:20px; width:56px; height:56px; border-radius:50%; border:none; cursor:pointer;
       background:linear-gradient(90deg,var(--green),var(--green-2)); color:#fff; font-size:24px; box-shadow:0 10px 24px rgba(0,0,0,.2); z-index:1100;
@@ -117,11 +113,12 @@
         </div>
       </section>
 
-      <!-- Request + Deezer + Chat FAB lives outside -->
+      <!-- Request + Deezer -->
       <aside class="panel card">
         <h3>📩 Request Lagu</h3>
         <form class="request-form" id="reqForm">
           <input id="reqName" type="text" placeholder="Nama Anda" required>
+          <input id="reqPhone" type="text" placeholder="Nomor HP (WA)" required>
           <input id="reqTitle" type="text" placeholder="Judul Lagu" required>
           <button type="submit">Kirim Request</button>
           <div id="reqMsg" class="msg"></div>
@@ -164,10 +161,13 @@
   </div>
 
   <footer class="footer-wrap" style="width:min(1200px,94vw);margin:44px auto 28px;padding:18px 24px;background:#0f172a;color:#cbd5e1;border-radius:16px;box-shadow:0 8px 20px rgba(15,23,42,.25);text-align:center">
-    © 2025 HaloRadio • Dibuat dengan Flask, Mixxx, Icecast & MongoDB
+    © 2025 HaloRadio • Dibuat Oleh Angga Sukha Pratama
   </footer>
 
   <script>
+    // ===== Konstanta Zona =====
+    const TZ_WIB = 'Asia/Jakarta';
+
     // ===== Player Status & Stats =====
     const player = document.getElementById('radio-player');
     const statusDiv = document.getElementById('broadcast-status');
@@ -195,20 +195,30 @@
     }
     fetchStats(); setInterval(fetchStats, 5000);
 
-    // ===== Request Lagu =====
+    // ===== Request Lagu (ditambah phone) =====
     const form = document.getElementById('reqForm');
     const nameEl = document.getElementById('reqName');
+    const phoneEl = document.getElementById('reqPhone');
     const titleEl = document.getElementById('reqTitle');
     const msgEl = document.getElementById('reqMsg');
     form.addEventListener('submit', async (e) => {
       e.preventDefault(); msgEl.textContent=''; msgEl.className='msg';
-      const payload = { name: nameEl.value.trim(), title: titleEl.value.trim() };
-      if (!payload.name || !payload.title){ msgEl.textContent='Nama & Judul wajib diisi.'; msgEl.classList.add('err'); return; }
+      const payload = {
+        name: nameEl.value.trim(),
+        phone: phoneEl.value.trim(),
+        title: titleEl.value.trim()
+      };
+      if (!payload.name || !payload.title || !payload.phone){
+        msgEl.textContent='Nama, Nomor HP & Judul wajib diisi.'; msgEl.classList.add('err'); return;
+      }
       try {
-        const r = await fetch('/api/request_song', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
+        const r = await fetch('/api/request_song', {
+          method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)
+        });
         const j = await r.json();
-        if(j.ok){ msgEl.textContent='Terima kasih! Request kamu sudah dikirim.'; msgEl.classList.add('ok'); form.reset(); }
-        else { throw new Error(j.error||'Gagal mengirim.'); }
+        if(j.ok){
+          msgEl.textContent='Terima kasih! Request kamu sudah dikirim.'; msgEl.classList.add('ok'); form.reset();
+        } else { throw new Error(j.error||'Gagal mengirim.'); }
       } catch(err){ msgEl.textContent = err.message || 'Terjadi kesalahan.'; msgEl.classList.add('err'); }
     });
 
@@ -222,16 +232,21 @@
     const upcomingEl = document.getElementById('upcoming');
 
     function fmtTimeRange(stISO, etISO){
-      const st = new Date(stISO); const et = new Date(etISO);
-      const sameDay = st.toDateString() === et.toDateString();
-      const d = st.toLocaleDateString(undefined,{weekday:'short', year:'numeric', month:'short', day:'numeric'});
-      const t1 = st.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});
-      const t2 = et.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});
-      return sameDay ? `${d} • ${t1}–${t2}` : `${d} ${t1} → ${et.toLocaleDateString()} ${t2}`;
+      const st = new Date(stISO);
+      const et = new Date(etISO);
+      const sameDay = st.toLocaleDateString('id-ID', { timeZone: TZ_WIB }) ===
+                      et.toLocaleDateString('id-ID', { timeZone: TZ_WIB });
+
+      const d  = st.toLocaleDateString('id-ID', { timeZone: TZ_WIB, weekday:'short', year:'numeric', month:'short', day:'numeric' });
+      const t1 = st.toLocaleTimeString('id-ID', { timeZone: TZ_WIB, hour:'2-digit', minute:'2-digit', hour12:false });
+      const t2 = et.toLocaleTimeString('id-ID', { timeZone: TZ_WIB, hour:'2-digit', minute:'2-digit', hour12:false });
+
+      return sameDay ? `${d} • ${t1}–${t2} WIB`
+                     : `${d} ${t1} → ${et.toLocaleDateString('id-ID',{ timeZone: TZ_WIB })} ${t2} WIB`;
     }
 
     async function loadNow(){
-      const r = await fetch('/api/schedules/now');
+      const r = await fetch('/api/schedules/now', { cache: 'no-store' });
       const j = await r.json();
       if(j.item){
         nowBox.style.display='flex'; noNow.style.display='none';
@@ -245,7 +260,7 @@
     }
 
     async function loadUpcoming(){
-      const r = await fetch('/api/schedules/upcoming?limit=8');
+      const r = await fetch('/api/schedules/upcoming?limit=8', { cache: 'no-store' });
       const j = await r.json();
       upcomingEl.innerHTML = '';
       (j.items||[]).forEach(it => {
@@ -261,7 +276,7 @@
 
     loadNow(); loadUpcoming(); setInterval(()=>{loadNow(); loadUpcoming();}, 30000);
 
-    // ===== Deezer Search & Preview =====
+    // ===== Deezer Search & Preview (pakai /api/music/search) =====
     const dzQuery = document.getElementById('dzQuery');
     const dzList = document.getElementById('dzList');
     const dzPreview = document.getElementById('dzPreview');
@@ -283,7 +298,7 @@
             <div>${it.artist || ''} • ${it.album || ''}</div>
           </div>
           <div class="dz-actions">
-            <button data-prev="${it.preview||''}">Preview</button>
+            <button data-prev="${it.preview||''}" ${it.preview ? '' : 'disabled'}>Preview</button>
             <button data-pick="${(it.title||'')+(it.artist?(' - '+it.artist):'')}">Pilih</button>
           </div>`;
         row.querySelector('[data-prev]').addEventListener('click', (e)=>{
@@ -299,9 +314,11 @@
 
     async function doSearch(q){
       if(!q){ renderResults([]); return; }
-      const r = await fetch('/api/music/search?q='+encodeURIComponent(q));
-      const j = await r.json();
-      renderResults(j.data||[]);
+      try{
+        const r = await fetch('/api/music/search?q='+encodeURIComponent(q), { cache:'no-store' });
+        const j = await r.json();
+        renderResults((j && j.data) || []);
+      }catch{ renderResults([]); }
     }
 
     dzQuery.addEventListener('input', ()=>{
@@ -309,7 +326,7 @@
       dzTimer = setTimeout(()=> doSearch(dzQuery.value.trim()), 400);
     });
 
-    // ===== Floating Chat (terhubung backend) =====
+    // ===== Floating Chat =====
     const fab   = document.getElementById('chatFab');
     const panel = document.getElementById('chatPanel');
     const closeBtn = document.getElementById('chatClose');
@@ -344,9 +361,10 @@
       items.forEach(it=>{
         const div = document.createElement('div');
         div.className = 'chat-msg';
-        const when = new Date(it.ts || Date.now());
+        const when = new Date(it.ts);
+        const whenStr = when.toLocaleString('id-ID', { timeZone: TZ_WIB, hour12:false });
         div.innerHTML = `
-          <div class="meta">${escapeHtml(it.name||'Anon')} • ${when.toLocaleString()}</div>
+          <div class="meta">${escapeHtml(it.name||'Anon')} • ${whenStr} WIB</div>
           <div class="text">${escapeHtml(it.text||'')}</div>`;
         list.appendChild(div);
       });

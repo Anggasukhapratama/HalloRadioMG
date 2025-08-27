@@ -1,13 +1,14 @@
+<!-- potong header & style persis dengan yang kamu kirim; di sini langsung versi lengkap halaman -->
 <!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Admin • Request Lagu & Jadwal</title>
+  <title>Admin • HaloRadio</title>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    :root{ --green:#22c55e; --green-2:#4ade80; --ink:#0f172a; --bg:#f0fdf4; }
+    :root{ --green:#22c55e; --green-2:#4ade80; --ink:#0f172a; --bg:#f0fdf4; --soft:#f8fafc; --line:#e2e8f0; }
     *{box-sizing:border-box}
     body{
       margin:0;font-family:'Poppins',sans-serif;color:var(--ink);
@@ -16,7 +17,8 @@
                  linear-gradient(180deg, #ffffff, var(--bg));
     }
     nav{
-      position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;
+      position:sticky;top:0;z-index:1000;
+      display:flex;align-items:center;justify-content:space-between;gap:16px;
       padding:16px 24px;background:rgba(255,255,255,.25);
       backdrop-filter:blur(12px) saturate(160%);border-bottom:1px solid rgba(255,255,255,.2)
     }
@@ -27,15 +29,25 @@
       color:#fff;padding:8px 14px;border-radius:999px;font-weight:700;
       box-shadow:0 0 10px rgba(74,222,128,.55)
     }
+    .subnav{
+      position:sticky;top:62px;z-index:999;
+      display:flex;gap:10px;flex-wrap:wrap;padding:10px 24px;background:rgba(255,255,255,.7);
+      backdrop-filter:blur(8px);border-bottom:1px solid rgba(0,0,0,.06)
+    }
+    .subnav a{
+      text-decoration:none;color:#065f46;font-weight:700;padding:8px 12px;border-radius:999px;
+      border:1px solid #bbf7d0;background:#ecfdf5;
+    }
     .container{max-width:1100px;margin:20px auto;padding:0 20px;flex:1;width:100%}
     .grid{display:grid;grid-template-columns:1fr;gap:18px}
     .card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:16px}
     .filter{margin:10px 0 18px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-    select, button, input, textarea{padding:10px 12px;border:1px solid #e2e8f0;border-radius:10px;font-size:.95rem}
+    select, button, input, textarea{padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:.95rem}
     button{
       background:linear-gradient(90deg,var(--green),var(--green-2));
       color:#fff;font-weight:700;cursor:pointer;box-shadow:0 0 10px rgba(74,222,128,.55);border:none
     }
+    button:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
     table{width:100%;border-collapse:separate;border-spacing:0 10px}
     th, td{padding:12px 14px;text-align:left;background:#fff;vertical-align:top}
     th{color:#065f46;background:#e8fff2;border-top-left-radius:12px;border-top-right-radius:12px}
@@ -47,21 +59,41 @@
     .s-done{background:#e2e8f0;color:#475569}
     .two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     @media (max-width: 900px){ .two-col{grid-template-columns:1fr} }
-
-    /* ====== FORM STYLE ====== */
-    .two-col > div label{display:block;margin:0 0 6px;font-weight:700;color:#065f46}
-    input[type="text"], input[type="datetime-local"], textarea, select{
-      width:100%; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px;
+    input[type="text"], input[type="datetime-local"], input[type="time"], textarea, select{
+      width:100%; background:#f8fafc; border:1px solid var(--line); border-radius:12px;
       font-size:1rem; padding:12px 14px; box-sizing:border-box;
     }
-    input[type="text"], input[type="datetime-local"]{ height:48px; }
+    input[type="text"], input[type="datetime-local"], input[type="time"]{ height:48px; }
     textarea{ min-height:90px; resize:vertical; }
     input:focus, textarea:focus, select:focus{outline:3px solid rgba(34,197,94,.25); border-color:#bbf7d0}
     input::placeholder, textarea::placeholder{ color:#94a3b8; }
     .hint{ display:block; margin-top:6px; color:#64748b; font-size:.85rem; }
+    .table-wrap{ max-height: 520px; overflow:auto; }
 
-    /* kecilkan button di dalam tabel */
-    table button{ padding:8px 10px; border:none; border-radius:10px; }
+    .toast{ position:fixed; right:20px; top:86px; z-index:1100; display:flex; flex-direction:column; gap:8px; }
+    .toast .t{ padding:10px 14px; border-radius:12px; color:#065f46; background:#ecfdf5; border:1px solid #bbf7d0; box-shadow:0 8px 20px rgba(16,185,129,.2); font-weight:700; max-width:min(520px, 90vw); animation:fadein .2s ease-out; }
+    .toast .err{ color:#7f1d1d; background:#fee2e2; border-color:#fecaca; box-shadow:0 8px 20px rgba(239,68,68,.2); }
+    @keyframes fadein{from{opacity:0; transform:translateY(-6px)}to{opacity:1; transform:translateY(0)}}
+
+    /* Playlist styles (dipertahankan) */
+    .day-tabs{ display:flex; gap:8px; flex-wrap:wrap; margin:6px 0 12px; }
+    .day-tab{ background:#fff; border:1px solid var(--line); padding:8px 12px; border-radius:999px; cursor:pointer; font-weight:700; color:var(--green); transition:background .15s ease, box-shadow .15s ease, color .15s ease, transform .08s ease; }
+    .day-tab:hover{ background:#f0fdf4; box-shadow:0 6px 14px rgba(34,197,94,.18); transform:translateY(-1px); }
+    .day-tab.active{ background:linear-gradient(90deg,var(--green),var(--green-2)); color:#fff; border-color:transparent; box-shadow:0 8px 18px rgba(34,197,94,.28); }
+    .today-badge{ margin-left:8px; font-size:.8rem; padding:2px 8px; border-radius:999px; background:#dcfce7; color:#166534; border:1px solid #bbf7d0; }
+    .pl-form{ display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:10px; }
+    .pl-form textarea{ grid-column: 1/-1; min-height:70px; }
+    .timeline{ position:relative; padding-left:22px; border-left:3px dashed #d1fae5; }
+    .slot{ position:relative; margin:12px 0; padding:12px 14px; border:1px solid var(--line); border-radius:14px; background:#fff; box-shadow:0 6px 14px rgba(0,0,0,.04); }
+    .slot::before{ content:""; position:absolute; left:-10px; top:16px; width:14px; height:14px; border-radius:50%; background:#ecfdf5; border:3px solid var(--green); box-shadow:0 0 0 3px rgba(34,197,94,.18); }
+    .slot .top{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .timechip{ font-weight:800; color:#065f46; background:#ecfdf5; border:1px solid #bbf7d0; border-radius:999px; padding:6px 10px; }
+    .prog{ font-weight:800; }
+    .tracks{ color:#475569; margin-top:6px; white-space:pre-wrap }
+    .slot .act{ margin-left:auto; display:flex; gap:8px; }
+    .slot.live{ border-color:#86efac; background:linear-gradient(180deg,#fff,#f0fff4); }
+    .slot.live .timechip{ background:#86efac; border-color:#22c55e; color:#064e3b; }
+    .empty{ color:#94a3b8; padding:10px; text-align:center; border:1px dashed var(--line); border-radius:12px; background:#fff; }
   </style>
 </head>
 <body>
@@ -73,39 +105,55 @@
     </div>
   </nav>
 
+  <div class="subnav">
+    <a href="#requests">Requests</a>
+    <a href="#schedules">Jadwal Siaran</a>
+    <a href="#playlist">Jadwal Playlist</a>
+    <a href="#chat">Monitor Chat</a>
+  </div>
+
   <div class="container">
     <div class="grid">
-
-      <!-- Daftar Request -->
-      <div class="card">
+      <!-- Requests -->
+      <div class="card" id="requests">
         <h3 style="margin-top:0">📩 Daftar Request Lagu</h3>
-        <div class="filter">
-          <label for="fstatus">Filter status:</label>
-          <select id="fstatus">
-            <option value="">Semua</option>
-            <option value="New">New</option>
-            <option value="In-Progress">In-Progress</option>
-            <option value="Done">Done</option>
-          </select>
-          <button id="refreshBtn">Refresh</button>
+        <div class="filter" style="justify-content:space-between">
+          <div>
+            <label for="fstatus">Filter status:</label>
+            <select id="fstatus">
+              <option value="">Semua</option>
+              <option value="New">New</option>
+              <option value="In-Progress">In-Progress</option>
+              <option value="Done">Done</option>
+            </select>
+            <button id="refreshBtn">Refresh</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <button id="prevPage">‹ Prev</button>
+            <span id="pageInfo" style="min-width:120px;text-align:center">Page 1/1</span>
+            <button id="nextPage">Next ›</button>
+          </div>
         </div>
-        <table id="tbl">
-          <thead>
-            <tr>
-              <th style="width:260px">ID</th>
-              <th style="width:160px">Nama</th>
-              <th>Judul Lagu</th>
-              <th style="width:170px">Waktu</th>
-              <th style="width:150px">Status</th>
-              <th style="width:220px">Aksi</th>
-            </tr>
-          </thead>
-          <tbody id="tbody"></tbody>
-        </table>
+        <div class="table-wrap">
+          <table id="tbl">
+            <thead>
+              <tr>
+                <th style="width:220px">ID</th>
+                <th style="width:150px">Nama</th>
+                <th style="width:150px">Nomor HP</th>
+                <th>Judul Lagu</th>
+                <th style="width:200px">Waktu Request (WIB)</th>
+                <th style="width:150px">Status</th>
+                <th style="width:220px">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
       </div>
 
-      <!-- Kelola Jadwal -->
-      <div class="card">
+      <!-- Jadwal Siaran -->
+      <div class="card" id="schedules">
         <h3 style="margin-top:0">🗓️ Kelola Jadwal Siaran</h3>
         <div class="two-col">
           <div>
@@ -120,12 +168,12 @@
             <div>
               <label>Mulai (lokal)</label>
               <input id="schStart" type="datetime-local" />
-              <small class="hint">Format mengikuti zona waktu browser (contoh: 25/08/2025 08:30)</small>
+              <small class="hint">Input dianggap <b>WIB</b>, akan disimpan sebagai UTC.</small>
             </div>
             <div>
               <label>Selesai (lokal)</label>
               <input id="schEnd" type="datetime-local" />
-              <small class="hint">Pastikan lebih besar dari waktu mulai</small>
+              <small class="hint">Harus lebih besar dari waktu mulai.</small>
             </div>
           </div>
           <div style="grid-column:1/-1">
@@ -133,15 +181,16 @@
             <textarea id="schDesc" rows="3" placeholder="Apa isi programnya?"></textarea>
           </div>
         </div>
-        <div style="margin-top:10px;display:flex;gap:10px">
+        <div style="margin-top:10px;display:flex;gap:10px;align-items:center;">
           <button id="btnAddSch">Tambah Jadwal</button>
           <button id="btnReloadSch">Muat Ulang</button>
+          <div id="schMsg" class="sch-msg"></div>
         </div>
         <div style="margin-top:12px">
           <table style="width:100%">
             <thead>
               <tr>
-                <th>Waktu</th>
+                <th>Waktu (WIB)</th>
                 <th>Program</th>
                 <th>Host</th>
                 <th>Deskripsi</th>
@@ -153,8 +202,29 @@
         </div>
       </div>
 
+      <!-- Playlist -->
+      <div class="card" id="playlist">
+        <h3 style="margin:0 0 8px">🎼 Jadwal Playlist (Admin Only)</h3>
+        <div class="day-tabs" id="dayTabs"></div>
+
+        <div class="pl-form" style="margin:10px 0 8px">
+          <select id="plDay"></select>
+          <input id="plProgram" placeholder="Program / Acara"/>
+          <input id="plStart" type="time" placeholder="Mulai"/>
+          <input id="plEnd" type="time" placeholder="Selesai"/>
+          <textarea id="plTracks" placeholder="Lagu / Catatan (opsional). Contoh: Lagu A → Lagu B → Lagu C"></textarea>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">
+          <button id="btnAddPl">Tambah Playlist</button>
+          <button id="btnReloadPl" style="background:#0ea5e9">Muat Ulang</button>
+          <small class="hint">Klik tab harinya buat fokus. Yang sedang berlangsung diberi highlight.</small>
+        </div>
+
+        <div id="plTimelineWrap"></div>
+      </div>
+
       <!-- Monitor Chat -->
-      <div class="card">
+      <div class="card" id="chat">
         <h3 style="margin-top:0">💬 Monitor Chat</h3>
         <div class="filter">
           <label><input type="checkbox" id="chatFlagOnly"> Tampilkan yang di-flag</label>
@@ -163,7 +233,7 @@
         <table style="width:100%">
           <thead>
             <tr>
-              <th style="width:160px">Waktu</th>
+              <th style="width:200px">Waktu (WIB)</th>
               <th style="width:160px">Nama</th>
               <th>Pesan</th>
               <th style="width:140px">IP</th>
@@ -179,40 +249,75 @@
   </div>
 
   <footer style="padding:16px;text-align:center;color:#64748b">© 2025 HaloRadio</footer>
+  <div class="toast" id="toast"></div>
 
   <script>
-    // ========= Request Lagu =========
+    // ========= Utils =========
+    const TZ_WIB = 'Asia/Jakarta';
+    const dayNames = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'];
+
+    function showToast(msg, isErr=false, ms=4000){
+      const wrap = document.getElementById('toast');
+      const div = document.createElement('div');
+      div.className = 't' + (isErr ? ' err' : '');
+      div.textContent = msg;
+      wrap.appendChild(div);
+      setTimeout(()=> { div.style.opacity='0'; div.style.transform='translateY(-6px)'; }, ms-250);
+      setTimeout(()=> wrap.removeChild(div), ms);
+    }
+
+    const fmtDate = (d) => new Date(d).toLocaleDateString('id-ID', { timeZone: TZ_WIB, year:'numeric', month:'2-digit', day:'2-digit' });
+    const fmtTime = (d) => new Date(d).toLocaleTimeString('id-ID', { timeZone: TZ_WIB, hour:'2-digit', minute:'2-digit', hour12:false });
+    function fmtRange(st, et){
+      const sDate = fmtDate(st), eDate = fmtDate(et);
+      const sTime = fmtTime(st), eTime = fmtTime(et);
+      return sDate === eDate ? `${sDate} ${sTime} – ${eTime} WIB` : `${sDate} ${sTime} → ${eDate} ${eTime} WIB`;
+    }
+
+    // ========= Requests (Pagination 10) =========
     const tbody = document.getElementById('tbody');
     const fstatus = document.getElementById('fstatus');
     const refreshBtn = document.getElementById('refreshBtn');
     const newCountEl = document.getElementById('newCount');
+    let allRequests = [], currentPage = 1; const PAGE_SIZE = 10;
+    const prevBtn = document.getElementById('prevPage');
+    const nextBtn = document.getElementById('nextPage');
+    const pageInfo = document.getElementById('pageInfo');
 
     function pill(status){
       if(status === 'New') return '<span class="status s-new">New</span>';
       if(status === 'In-Progress') return '<span class="status s-prog">In-Progress</span>';
       return '<span class="status s-done">Done</span>';
     }
-
     async function loadCount(){
       try{
-        const r = await fetch('/api/admin/requests/new_count');
+        const r = await fetch('/api/admin/requests/new_count', { cache:'no-store' });
         const j = await r.json();
         newCountEl.textContent = j.count ?? 0;
       }catch{ newCountEl.textContent = '0'; }
     }
-
-    async function loadData(){
-      const qs = fstatus.value ? ('?status=' + encodeURIComponent(fstatus.value)) : '';
-      const res = await fetch('/api/admin/requests' + qs);
-      const data = await res.json();
+    function updatePager(){
+      const total = allRequests.length;
+      const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+      if (currentPage > totalPages) currentPage = totalPages;
+      if (currentPage < 1) currentPage = 1;
+      pageInfo.textContent = `Page ${currentPage}/${totalPages}`;
+      prevBtn.disabled = currentPage <= 1;
+      nextBtn.disabled = currentPage >= totalPages;
+    }
+    function renderPage(){
       tbody.innerHTML = '';
-      (data.items || []).forEach(item => {
+      const start = (currentPage - 1) * PAGE_SIZE;
+      const slice = allRequests.slice(start, start + PAGE_SIZE);
+      slice.forEach(item => {
         const tr = document.createElement('tr');
+        const timeString = new Date(item.created_at).toLocaleString('id-ID', { timeZone: TZ_WIB, hour12:false });
         tr.innerHTML = `
           <td style="font-family:monospace">${item._id}</td>
           <td>${item.name}</td>
+          <td>${item.phone || '-'}</td>
           <td>${item.title}</td>
-          <td>${new Date(item.created_at).toLocaleString()}</td>
+          <td>${timeString} WIB</td>
           <td>${pill(item.status)}</td>
           <td>
             <button onclick="setStatus('${item._id}', 'New')">Set New</button>
@@ -221,24 +326,35 @@
           </td>`;
         tbody.appendChild(tr);
       });
+      updatePager();
+    }
+    prevBtn.addEventListener('click', ()=>{ currentPage--; renderPage(); });
+    nextBtn.addEventListener('click', ()=>{ currentPage++; renderPage(); });
+    async function loadData(){
+      const qs = fstatus.value ? ('?status=' + encodeURIComponent(fstatus.value)) : '';
+      const res = await fetch('/api/admin/requests' + qs, { cache:'no-store' });
+      const data = await res.json();
+      allRequests = data.items || [];
+      currentPage = 1;
+      renderPage();
       loadCount();
     }
-
     async function setStatus(id, status){
-      await fetch('/api/admin/requests/' + id + '/status', {
+      const r = await fetch('/api/admin/requests/' + id + '/status', {
         method:'POST', headers:{'Content-Type':'application/json'},
         body:JSON.stringify({status})
       });
+      const j = await r.json();
+      if(j.ok){ showToast('Status diperbarui.'); }
+      else { showToast(j.error || 'Gagal update status', true); }
       loadData();
     }
-
     fstatus.addEventListener('change', loadData);
     refreshBtn.addEventListener('click', loadData);
-
     loadData();
     setInterval(() => { loadCount(); if(!fstatus.value || fstatus.value === 'New'){ loadData(); } }, 5000);
 
-    // ========= Jadwal Admin =========
+    // ========= Jadwal Siaran =========
     const schTitle = document.getElementById('schTitle');
     const schHost  = document.getElementById('schHost');
     const schStart = document.getElementById('schStart');
@@ -247,46 +363,46 @@
     const schBody  = document.getElementById('schBody');
     const btnAddSch = document.getElementById('btnAddSch');
     const btnReloadSch = document.getElementById('btnReloadSch');
+    const schMsg   = document.getElementById('schMsg');
 
-    function toUTCISO(localStr){
+    function toUTCISOFromLocal(localStr){
       if(!localStr) return null;
-      return new Date(localStr).toISOString(); // JS otomatis ubah dari lokal -> UTC
-    }
-
-
-    function fmtRange(st, et){
-      const s = new Date(st), e = new Date(et);
-      return `${s.toLocaleDateString()} ${s.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})} – ${e.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`
+      const [datePart, timePart] = localStr.split('T');
+      const [y, m, d] = datePart.split('-').map(Number);
+      const [hh, mm]  = timePart.split(':').map(Number);
+      const utcMs = Date.UTC(y, m - 1, d, hh - 7, mm, 0, 0);
+      return new Date(utcMs).toISOString();
     }
 
     async function addSchedule(){
-      const startISO = toUTCISO(schStart.value);
-      const endISO   = toUTCISO(schEnd.value);
-
-      if(!schTitle.value.trim()){ alert('Judul program wajib diisi'); return; }
-      if(!startISO || !endISO){ alert('Waktu mulai & selesai wajib diisi'); return; }
-      if(new Date(endISO) <= new Date(startISO)){ alert('Waktu selesai harus setelah waktu mulai'); return; }
-
+      schMsg.textContent = '';
+      const startISO = toUTCISOFromLocal(schStart.value);
+      const endISO   = toUTCISOFromLocal(schEnd.value);
+      if(!schTitle.value.trim()){ schMsg.textContent='Judul program wajib diisi.'; return; }
+      if(!startISO || !endISO){ schMsg.textContent='Waktu mulai & selesai wajib diisi.'; return; }
+      if(new Date(endISO) <= new Date(startISO)){ schMsg.textContent='Waktu selesai harus setelah waktu mulai.'; return; }
       const payload = {
         title: schTitle.value.trim(),
         host: schHost.value.trim(),
         description: schDesc.value.trim(),
-        start_time: startISO,
-        end_time: endISO
+        start_time: startISO, end_time: endISO
       };
-
-      const r = await fetch('/api/admin/schedules', {
-        method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)
-      });
-      const j = await r.json();
-      if(!j.ok){ alert(j.error||'Gagal menyimpan'); return; }
-      schTitle.value = schHost.value = schDesc.value = '';
-      schStart.value = schEnd.value = '';
-      await loadSchedules();
+      try{
+        const r = await fetch('/api/admin/schedules', {
+          method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)
+        });
+        const j = await r.json();
+        if(!j.ok) throw new Error(j.error||'Gagal menyimpan.');
+        schTitle.value = schHost.value = schDesc.value = '';
+        schStart.value = schEnd.value = '';
+        showToast('Jadwal siaran ditambahkan.');
+        await loadSchedules();
+      }catch(e){
+        schMsg.textContent = e.message || 'Gagal menyimpan.'; showToast(schMsg.textContent, true);
+      }
     }
-
     async function loadSchedules(){
-      const r = await fetch('/api/admin/schedules');
+      const r = await fetch('/api/admin/schedules', { cache:'no-store' });
       const j = await r.json();
       schBody.innerHTML = '';
       (j.items||[]).forEach(it => {
@@ -301,36 +417,173 @@
           if(confirm('Hapus jadwal ini?')){
             const r = await fetch('/api/admin/schedules/'+id, {method:'DELETE'});
             const j = await r.json();
-            if(!j.ok){ alert(j.error||'Gagal hapus'); }
+            if(j.ok){ showToast('Jadwal dihapus.'); } else { showToast(j.error||'Gagal hapus', true); }
             loadSchedules();
           }
         });
         schBody.appendChild(tr);
       });
     }
-
     btnAddSch.addEventListener('click', addSchedule);
     btnReloadSch.addEventListener('click', loadSchedules);
     loadSchedules();
 
-    // ========= Monitor Chat (Admin) =========
+    // ========= Playlist =========
+    const plTimelineWrap = document.getElementById('plTimelineWrap');
+    const dayTabs = document.getElementById('dayTabs');
+    const plDaySel = document.getElementById('plDay');
+    const plProgram = document.getElementById('plProgram');
+    const plStart = document.getElementById('plStart');
+    const plEnd   = document.getElementById('plEnd');
+    const plTracks = document.getElementById('plTracks');
+    const btnAddPl = document.getElementById('btnAddPl');
+    const btnReloadPl = document.getElementById('btnReloadPl');
+
+    let playlistData = [];
+    let activeDay = new Date().getDay() - 1; if(activeDay < 0) activeDay = 6;
+
+    function setupDays(){
+      plDaySel.innerHTML = '';
+      dayTabs.innerHTML = '';
+      dayNames.forEach((nm, i)=>{
+        const opt = document.createElement('option');
+        opt.value = i; opt.textContent = nm + (i===activeDay?' (hari ini)':'');
+        plDaySel.appendChild(opt);
+
+        const btn = document.createElement('button');
+        btn.className = 'day-tab' + (i===activeDay?' active':'');
+        btn.textContent = nm;
+        if(i===activeDay){
+          const badge = document.createElement('span');
+          badge.className = 'today-badge'; badge.textContent = 'Hari ini';
+          btn.appendChild(badge);
+        }
+        btn.addEventListener('click', ()=>{ setActiveDay(i); });
+        dayTabs.appendChild(btn);
+      });
+      plDaySel.value = String(activeDay);
+    }
+    setupDays();
+
+    function setActiveDay(d){
+      activeDay = d;
+      [...dayTabs.children].forEach((el, idx)=> el.classList.toggle('active', idx===activeDay));
+      plDaySel.value = String(activeDay);
+      renderTimeline();
+    }
+
+    function groupByDay(items){
+      const map = {0:[],1:[],2:[],3:[],4:[],5:[],6:[]};
+      (items||[]).forEach(it=>{ map[it.day].push(it); });
+      for(const d in map){ map[d].sort((a,b)=> a.start_hhmm.localeCompare(b.start_hhmm)); }
+      return map;
+    }
+
+    function isLiveSlot(day, start, end){
+      try{
+        const now = new Date();
+        const nowWIB = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }));
+        const nowDay = (nowWIB.getDay()+6)%7;
+        if(nowDay !== day) return false;
+        const [sh, sm] = start.split(':').map(Number);
+        const [eh, em] = end.split(':').map(Number);
+        const mins = nowWIB.getHours()*60 + nowWIB.getMinutes();
+        const s = sh*60+sm, e = eh*60+em;
+        return mins >= s && mins < e;
+      }catch{ return false; }
+    }
+
+    function renderTimeline(){
+      const grouped = groupByDay(playlistData);
+      plTimelineWrap.innerHTML = '';
+      const day = activeDay;
+      const arr = grouped[day] || [];
+      const box = document.createElement('div');
+      if(!arr.length){
+        box.innerHTML = `<div class="empty">Belum ada playlist untuk ${dayNames[day]}.</div>`;
+        plTimelineWrap.appendChild(box);
+        return;
+      }
+      const wrap = document.createElement('div'); wrap.className = 'timeline';
+      arr.forEach(it=>{
+        const live = isLiveSlot(it.day, it.start_hhmm, it.end_hhmm);
+        const row = document.createElement('div');
+        row.className = 'slot' + (live?' live':'');
+        row.innerHTML = `
+          <div class="top">
+            <span class="timechip">${it.start_hhmm}–${it.end_hhmm} WIB</span>
+            <span class="prog">${it.program||'-'}</span>
+            <span class="act" style="margin-left:auto">
+              <button data-del="${it._id}" title="Hapus">Hapus</button>
+            </span>
+          </div>
+          <div class="tracks">${(it.tracks||'').replace(/\n/g,'\n')}</div>
+        `;
+        row.querySelector('[data-del]').addEventListener('click', async (e)=>{
+          const id = e.currentTarget.getAttribute('data-del');
+          if(confirm('Hapus item playlist ini?')){
+            const r = await fetch('/api/admin/playlist/'+id, { method:'DELETE' });
+            const j = await r.json();
+            if(j.ok){ showToast('Item playlist dihapus.'); await loadPlaylist(); }
+            else { showToast(j.error||'Gagal hapus item', true); }
+          }
+        });
+        wrap.appendChild(row);
+      });
+      plTimelineWrap.appendChild(wrap);
+    }
+
+    async function loadPlaylist(){
+      const r = await fetch('/api/admin/playlist', { cache:'no-store' });
+      const j = await r.json();
+      playlistData = j.items || [];
+      renderTimeline();
+    }
+    function hhmmValid(s){ return /^\d{2}:\d{2}$/.test(s); }
+
+    async function addPlaylist(){
+      const day = parseInt(plDaySel.value, 10);
+      const start_hhmm = (plStart.value||'').trim();
+      const end_hhmm   = (plEnd.value||'').trim();
+      const program    = (plProgram.value||'').trim();
+      const tracks     = (plTracks.value||'').trim();
+      if(!program){ showToast('Program wajib diisi.', true); return; }
+      if(!hhmmValid(start_hhmm) || !hhmmValid(end_hhmm)){ showToast('Format waktu harus HH:MM.', true); return; }
+      try{
+        const r = await fetch('/api/admin/playlist', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ day, start_hhmm, end_hhmm, program, tracks })
+        });
+        const j = await r.json();
+        if(!j.ok) throw new Error(j.error||'Gagal menyimpan playlist.');
+        plProgram.value = plTracks.value = ''; plStart.value = plEnd.value = '';
+        showToast('Playlist ditambahkan.');
+        await loadPlaylist();
+        setActiveDay(day);
+      }catch(e){
+        showToast(e.message || 'Gagal menyimpan playlist.', true);
+      }
+    }
+
+    btnAddPl.addEventListener('click', addPlaylist);
+    btnReloadPl.addEventListener('click', loadPlaylist);
+    loadPlaylist();
+
+    // ========= Chat =========
     const chatBody = document.getElementById('chatBody');
     const chatReload = document.getElementById('chatReload');
     const chatFlagOnly = document.getElementById('chatFlagOnly');
-
-    function escapeHtmlAdmin(s){
-      return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-    }
-
+    function escapeHtmlAdmin(s){ return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
     async function loadChatList(){
       const qs = chatFlagOnly.checked ? '?flagged=1&limit=200' : '?limit=200';
-      const r = await fetch('/api/admin/chat'+qs);
+      const r = await fetch('/api/admin/chat'+qs, { cache:'no-store' });
       const j = await r.json();
       chatBody.innerHTML = '';
       (j.items||[]).forEach(it=>{
+        const timeString = new Date(it.ts).toLocaleString('id-ID', { timeZone: TZ_WIB, hour12:false });
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td>${new Date(it.ts).toLocaleString()}</td>
+          <td>${timeString} WIB</td>
           <td>${escapeHtmlAdmin(it.name)}</td>
           <td>${escapeHtmlAdmin(it.text)}</td>
           <td>${escapeHtmlAdmin(it.ip||'-')}</td>
@@ -341,7 +594,7 @@
           if(confirm('Hapus pesan ini?')){
             const r = await fetch('/api/admin/chat/'+id, {method:'DELETE'});
             const j = await r.json();
-            if(!j.ok){ alert(j.error||'Gagal hapus'); }
+            if(j.ok){ showToast('Pesan dihapus.'); } else { showToast(j.error||'Gagal hapus', true); }
             loadChatList();
           }
         });
