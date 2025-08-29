@@ -1,0 +1,51 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Jadwal Siaran • HaloRadio{% endblock %}
+{% block header_left %}🗓️ Kelola Jadwal Siaran{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="two-col">
+    <div>
+      <label>Judul Program</label>
+      <input id="schTitle" placeholder="Contoh: Morning Vibes"/>
+    </div>
+    <div>
+      <label>Penyiar / Host</label>
+      <input id="schHost" placeholder="Contoh: DJ Angga"/>
+    </div>
+    <div class="two-col" style="grid-column:1/-1">
+      <div>
+        <label>Mulai (lokal)</label>
+        <input id="schStart" type="datetime-local" />
+        <small class="hint">Input dianggap <b>WIB</b>, akan disimpan sebagai UTC.</small>
+      </div>
+      <div>
+        <label>Selesai (lokal)</label>
+        <input id="schEnd" type="datetime-local" />
+        <small class="hint">Harus lebih besar dari waktu mulai.</small>
+      </div>
+    </div>
+    <div style="grid-column:1/-1">
+      <label>Deskripsi</label>
+      <textarea id="schDesc" rows="3" placeholder="Apa isi programnya?"></textarea>
+    </div>
+  </div>
+  <div style="margin-top:10px;display:flex;gap:10px;align-items:center;">
+    <button id="btnAddSch">Tambah Jadwal</button>
+    <button id="btnReloadSch">Muat Ulang</button>
+    <div id="schMsg" class="sch-msg"></div>
+  </div>
+  <div style="margin-top:12px">
+    <table style="width:100%">
+      <thead><tr>
+        <th>Waktu (WIB)</th><th>Program</th><th>Host</th><th>Deskripsi</th><th>Aksi</th>
+      </tr></thead>
+      <tbody id="schBody"></tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="{{ url_for('static', filename='admin/schedules.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "admin/_layout.html" %}
+{% block title %}YouTube Linker • HaloRadio{% endblock %}
+{% block header_left %}▶ YouTube Linker{% endblock %}
+
+{% block content %}
+<div class="card card--yt compact" id="ytlinker">
+  <h3>▶ YouTube Linker</h3>
+  <div class="row" style="margin-bottom:8px">
+    <input id="ytQuery" class="stretch" placeholder="Judul / artis"/>
+    <button id="ytBtnCari">Cari</button>
+  </div>
+  <div id="ytList" class="list"></div>
+  <hr style="margin:12px 0;border:none;border-top:1px solid var(--line)">
+  <div class="input-group" style="margin-bottom:6px">
+    <label for="ytUrl" class="muted" style="min-width:88px">URL Video</label>
+    <input id="ytUrl" placeholder="https://youtu.be/… atau ?v=…"/>
+    <div class="actions">
+      <button id="ytBtnCopy" class="btn-ghost">Salin</button>
+      <button id="ytBtnOpen">Buka YT</button>
+      <button id="ytBtnConv">Konverter</button>
+    </div>
+  </div>
+  <small class="muted">Gunakan hanya untuk konten legal yang kamu miliki haknya.</small>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="{{ url_for('static', filename='admin/ytlinker.js') }}"></script>
+{% endblock %}

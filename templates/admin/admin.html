@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin • HaloRadio</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+   <link rel="stylesheet" href="{{ url_for('static', filename='admin/admin.css') }}">
+</head>
+<body>
+  <button class="toggle" id="btnToggle">☰ Menu</button>
+
+  <div class="app">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">🎧 HaloRadio • Admin</div>
+      <div class="badge">🔔 <span id="newCount">0</span> Request Baru</div>
+      <nav class="navlist">
+        <a href="#requests">📩 Requests</a>
+        <a href="#schedules">🗓️ Jadwal Siaran</a>
+        <a href="#playlist">🎼 Jadwal Playlist</a>
+        <a href="#chat">💬 Monitor Chat</a>
+        <a href="#ytlinker">▶ YouTube Linker</a>
+      </nav>
+      <div class="bottom"><a class="logout" href="/admin/logout">Logout ↗</a></div>
+    </aside>
+
+    <!-- CONTENT -->
+    <main class="content">
+      <div class="content-header">
+        <div style="font-weight:700">Dashboard</div>
+        <div style="color:#64748b">Tema & warna tetap — versi 3 file</div>
+      </div>
+
+      <div class="container">
+        <div class="grid">
+          <!-- Requests -->
+          <section class="card" id="requests">
+            <h3 style="margin-top:0">📩 Daftar Request Lagu</h3>
+            <div class="filter" style="justify-content:space-between">
+              <div>
+                <label for="fstatus">Filter status:</label>
+                <select id="fstatus">
+                  <option value="">Semua</option>
+                  <option value="New">New</option>
+                  <option value="In-Progress">In-Progress</option>
+                  <option value="Done">Done</option>
+                </select>
+                <button id="refreshBtn">Refresh</button>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <button id="prevPage">‹ Prev</button>
+                <span id="pageInfo" style="min-width:120px;text-align:center">Page 1/1</span>
+                <button id="nextPage">Next ›</button>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table id="tbl">
+                <thead>
+                  <tr>
+                    <th style="width:220px">ID</th>
+                    <th style="width:150px">Nama</th>
+                    <th style="width:150px">Nomor HP</th>
+                    <th>Judul Lagu</th>
+                    <th style="width:200px">Waktu Request (WIB)</th>
+                    <th style="width:150px">Status</th>
+                    <th style="width:220px">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- Jadwal Siaran -->
+          <section class="card" id="schedules">
+            <h3 style="margin-top:0">🗓️ Kelola Jadwal Siaran</h3>
+            <div class="two-col">
+              <div>
+                <label>Judul Program</label>
+                <input id="schTitle" placeholder="Contoh: Morning Vibes"/>
+              </div>
+              <div>
+                <label>Penyiar / Host</label>
+                <input id="schHost" placeholder="Contoh: DJ Angga"/>
+              </div>
+              <div class="two-col" style="grid-column:1/-1">
+                <div>
+                  <label>Mulai (lokal)</label>
+                  <input id="schStart" type="datetime-local" />
+                  <small class="hint">Input dianggap <b>WIB</b>, akan disimpan sebagai UTC.</small>
+                </div>
+                <div>
+                  <label>Selesai (lokal)</label>
+                  <input id="schEnd" type="datetime-local" />
+                  <small class="hint">Harus lebih besar dari waktu mulai.</small>
+                </div>
+              </div>
+              <div style="grid-column:1/-1">
+                <label>Deskripsi</label>
+                <textarea id="schDesc" rows="3" placeholder="Apa isi programnya?"></textarea>
+              </div>
+            </div>
+            <div style="margin-top:10px;display:flex;gap:10px;align-items:center;">
+              <button id="btnAddSch">Tambah Jadwal</button>
+              <button id="btnReloadSch">Muat Ulang</button>
+              <div id="schMsg" class="sch-msg"></div>
+            </div>
+            <div style="margin-top:12px">
+              <table style="width:100%">
+                <thead>
+                <tr>
+                  <th>Waktu (WIB)</th>
+                  <th>Program</th>
+                  <th>Host</th>
+                  <th>Deskripsi</th>
+                  <th>Aksi</th>
+                </tr>
+                </thead>
+                <tbody id="schBody"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- Playlist -->
+          <section class="card" id="playlist">
+            <h3 style="margin:0 0 8px">🎼 Jadwal Playlist (Admin Only)</h3>
+            <div class="day-tabs" id="dayTabs"></div>
+            <div class="pl-form" style="margin:10px 0 8px">
+              <select id="plDay"></select>
+              <input id="plProgram" placeholder="Program / Acara"/>
+              <input id="plStart" type="time" placeholder="Mulai"/>
+              <input id="plEnd" type="time" placeholder="Selesai"/>
+              <textarea id="plTracks" placeholder="Lagu / Catatan (opsional). Contoh: Lagu A → Lagu B → Lagu C"></textarea>
+            </div>
+            <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">
+              <button id="btnAddPl">Tambah Playlist</button>
+              <button id="btnReloadPl" style="background:#0ea5e9">Muat Ulang</button>
+              <small class="hint">Klik tab harinya buat fokus. Yang sedang berlangsung diberi highlight.</small>
+            </div>
+
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+              <button id="plExportCsv" style="background:#0ea5e9">Export CSV</button>
+              <select id="plCsvMode" title="Mode impor">
+                <option value="append">Import (Append/Upsert)</option>
+                <option value="replace">Import (Replace All)</option>
+              </select>
+              <input id="plCsvFile" type="file" accept=".csv,text/csv" style="display:none" />
+              <button id="plImportCsv" style="background:#10b981">Import CSV</button>
+            </div>
+
+            <div id="plTimelineWrap"></div>
+          </section>
+
+          <!-- Chat -->
+          <section class="card" id="chat">
+            <h3 style="margin-top:0">💬 Monitor Chat</h3>
+            <div class="filter">
+              <label><input type="checkbox" id="chatFlagOnly"> Tampilkan yang di-flag</label>
+              <button id="chatReload">Muat Ulang</button>
+            </div>
+            <table style="width:100%">
+              <thead>
+              <tr>
+                <th style="width:200px">Waktu (WIB)</th>
+                <th style="width:160px">Nama</th>
+                <th>Pesan</th>
+                <th style="width:140px">IP</th>
+                <th style="width:120px">Flag</th>
+                <th style="width:120px">Aksi</th>
+              </tr>
+              </thead>
+              <tbody id="chatBody"></tbody>
+            </table>
+          </section>
+
+          <!-- YouTube Linker -->
+          <section class="card card--yt compact" id="ytlinker">
+            <h3>▶ YouTube Linker</h3>
+
+            <div class="row" style="margin-bottom:8px">
+              <input id="ytQuery" class="stretch" placeholder="Judul / artis"/>
+              <button id="ytBtnCari">Cari</button>
+            </div>
+
+            <div id="ytList" class="list"></div>
+
+            <hr style="margin:12px 0;border:none;border-top:1px solid var(--line)">
+
+            <div class="input-group" style="margin-bottom:6px">
+              <label for="ytUrl" class="muted" style="min-width:88px">URL Video</label>
+              <input id="ytUrl" placeholder="https://youtu.be/… atau ?v=…"/>
+              <div class="actions">
+                <button id="ytBtnCopy" class="btn-ghost">Salin</button>
+                <button id="ytBtnOpen">Buka YT</button>
+                <button id="ytBtnConv">Konverter</button>
+              </div>
+            </div>
+
+            <small class="muted">Gunakan hanya untuk konten legal yang kamu miliki haknya.</small>
+          </section>
+        </div>
+      </div>
+
+      <footer style="padding:16px;text-align:center;color:#64748b">© 2025 HaloRadio</footer>
+    </main>
+  </div>
+
+  <a class="badge-link" href="https://www.youtubemp3.ltd/id" target="_blank" rel="noopener">Buka youtubemp3.ltd ↗</a>
+  <div class="toast" id="toast"></div>
+
+  <script type="module" src="{{ url_for('static', filename='admin/admin.js') }}"></script>
+</body>
+</html>

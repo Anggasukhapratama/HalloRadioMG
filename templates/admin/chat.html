@@ -1,0 +1,29 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Monitor Chat • HaloRadio{% endblock %}
+{% block header_left %}💬 Monitor Chat{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="filter">
+    <label><input type="checkbox" id="chatFlagOnly"> Tampilkan yang di-flag</label>
+    <button id="chatReload">Muat Ulang</button>
+  </div>
+  <table style="width:100%">
+    <thead>
+      <tr>
+        <th style="width:200px">Waktu (WIB)</th>
+        <th style="width:160px">Nama</th>
+        <th>Pesan</th>
+        <th style="width:140px">IP</th>
+        <th style="width:120px">Flag</th>
+        <th style="width:120px">Aksi</th>
+      </tr>
+    </thead>
+    <tbody id="chatBody"></tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="{{ url_for('static', filename='admin/chat.js') }}"></script>
+{% endblock %}

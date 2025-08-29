@@ -1,0 +1,47 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Requests • HaloRadio{% endblock %}
+{% block header_left %}📩 Daftar Request Lagu{% endblock %}
+{% block header_right %}Kelola request per halaman{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="filter" style="justify-content:space-between">
+    <div>
+      <label for="fstatus">Filter status:</label>
+      <select id="fstatus">
+        <option value="">Semua</option>
+        <option value="New">New</option>
+        <option value="In-Progress">In-Progress</option>
+        <option value="Done">Done</option>
+      </select>
+      <button id="refreshBtn">Refresh</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button id="prevPage">‹ Prev</button>
+      <span id="pageInfo" style="min-width:120px;text-align:center">Page 1/1</span>
+      <button id="nextPage">Next ›</button>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table id="tbl">
+      <thead>
+        <tr>
+          <th style="width:220px">ID</th>
+          <th style="width:150px">Nama</th>
+          <th style="width:150px">Nomor HP</th>
+          <th>Judul Lagu</th>
+          <th style="width:200px">Waktu Request (WIB)</th>
+          <th style="width:150px">Status</th>
+          <th style="width:220px">Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="{{ url_for('static', filename='admin/requests.js') }}"></script>
+{% endblock %}

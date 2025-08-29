@@ -1,0 +1,34 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Playlist • HaloRadio{% endblock %}
+{% block header_left %}🎼 Jadwal Playlist (Admin Only){% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="day-tabs" id="dayTabs"></div>
+  <div class="pl-form" style="margin:10px 0 8px">
+    <select id="plDay"></select>
+    <input id="plProgram" placeholder="Program / Acara"/>
+    <input id="plStart" type="time" placeholder="Mulai"/>
+    <input id="plEnd" type="time" placeholder="Selesai"/>
+    <textarea id="plTracks" placeholder="Lagu / Catatan (opsional). Contoh: Lagu A → Lagu B → Lagu C"></textarea>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">
+    <button id="btnAddPl">Tambah Playlist</button>
+    <button id="btnReloadPl" style="background:#0ea5e9">Muat Ulang</button>
+    <small class="hint">Klik tab harinya buat fokus. Yang sedang berlangsung diberi highlight.</small>
+  </div>
+
+  <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+    <button id="plExportCsv" style="background:#0ea5e9">Export CSV</button>
+    <select id="plCsvMode"><option value="append">Import (Append/Upsert)</option><option value="replace">Import (Replace All)</option></select>
+    <input id="plCsvFile" type="file" accept=".csv,text/csv" style="display:none" />
+    <button id="plImportCsv" style="background:#10b981">Import CSV</button>
+  </div>
+
+  <div id="plTimelineWrap"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="{{ url_for('static', filename='admin/playlist.js') }}"></script>
+{% endblock %}

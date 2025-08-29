@@ -5,10 +5,12 @@ from datetime import datetime, timezone, timedelta
 from bson import ObjectId
 from pymongo import MongoClient, ASCENDING, DESCENDING
 from dotenv import load_dotenv
-import csv, re
+import csv
 from io import StringIO
 from werkzeug.utils import secure_filename  # ok disisakan walau tak dipakai
 from collections import defaultdict
+import re
+import urllib.parse
 
 # ====== Load .env ======
 load_dotenv()
@@ -58,6 +60,71 @@ col_chat_rl.create_index([("ip", ASCENDING), ("ts", DESCENDING)])
 
 # Playlist: urutkan per-hari dengan kunci urutan kustom
 col_playlist.create_index([("day", ASCENDING), ("sort_key", ASCENDING), ("start_hhmm", ASCENDING)])
+
+
+YOUTUBE_UA = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                  "AppleWebKit/537.36 (KHTML, like Gecko) "
+                  "Chrome/124.0 Safari/537.36"
+}
+
+def _extract_first_video_id_from_html(html_text: str) -> str | None:
+    """
+    Coba 2 cara:
+    1) JSON initialData: "videoId":"XXXXXXXXXXX"
+    2) Fallback: watch?v=XXXXXXXXXXX
+    """
+    # 1) Cari pola videoId di blob JSON
+    m = re.findall(r'"videoId":"([a-zA-Z0-9_-]{11})"', html_text)
+    if m:
+        # Prefer non-shorts dulu kalau bisa, tapi umumnya sama ID-nya
+        return m[0]
+
+    # 2) Fallback: watch?v=ID
+    m2 = re.findall(r'watch\?v=([a-zA-Z0-9_-]{11})', html_text)
+    if m2:
+        return m2[0]
+
+    return None
+
+@app.route("/api/tools/yt/find_first")
+def yt_find_first():
+    """
+    Param:
+      - q   : kata kunci pencarian (mis. 'Nothing To Do Bancali')
+      - url : (opsional) kalau user kirim link /results?search_query=...
+    Return: { ok:True, url:'https://www.youtube.com/watch?v=ID', id:'ID' }
+    """
+    q = (request.args.get("q") or "").strip()
+    url_in = (request.args.get("url") or "").strip()
+
+    if not q and url_in:
+        try:
+            u = urllib.parse.urlparse(url_in)
+            if u.netloc.endswith("youtube.com") and u.path.startswith("/results"):
+                qs = urllib.parse.parse_qs(u.query or "")
+                qlist = qs.get("search_query", [])
+                if qlist:
+                    q = qlist[0]
+        except Exception:
+            pass
+
+    if not q:
+        return jsonify({"ok": False, "error": "Butuh parameter q atau url results."}), 400
+
+    try:
+        yurl = "https://www.youtube.com/results?search_query=" + urllib.parse.quote(q)
+        resp = pyrequests.get(yurl, headers=YOUTUBE_UA, timeout=8)
+        resp.raise_for_status()
+        vid = _extract_first_video_id_from_html(resp.text)
+        if not vid:
+            return jsonify({"ok": False, "error": "Tidak ketemu video dari pencarian."}), 404
+        return jsonify({"ok": True, "id": vid, "url": f"https://www.youtube.com/watch?v={vid}"})
+    except pyrequests.exceptions.Timeout:
+        return jsonify({"ok": False, "error": "Timeout ke YouTube."}), 504
+    except Exception as e:
+        print("yt_find_first error:", e)
+        return jsonify({"ok": False, "error": "Gagal mengambil hasil YouTube."}), 502
 
 # ====== Util auth admin ======
 def is_admin():
@@ -250,7 +317,7 @@ def api_request_song():
     res = col_requests.insert_one(doc)
     return jsonify({"ok": True, "id": str(res.inserted_id)})
 
-# ====== ROUTES: Admin ======
+# ====== ROUTES: Admin (Login/Logout + Halaman UI) ======
 @app.route("/admin/login", methods=["GET", "POST"])
 def admin_login():
     if request.method == "POST":
@@ -258,7 +325,8 @@ def admin_login():
         pwd = request.form.get("password")
         if user == ADMIN_USER and pwd == ADMIN_PASSWORD:
             session["is_admin"] = True
-            return redirect(url_for("admin_dashboard"))
+            # PERBAIKAN: arahkan ke halaman Requests (endpoint UI yang ada)
+            return redirect(url_for("admin_requests_page"))
         return render_template("admin_login.html", error="Username/Password salah.")
     return render_template("admin_login.html")
 
@@ -267,10 +335,36 @@ def admin_logout():
     session.clear()
     return redirect(url_for("admin_login"))
 
+# Halaman root admin diarahkan ke Requests
 @app.route("/admin")
 @admin_required
-def admin_dashboard():
-    return render_template("admin.html")
+def admin_root():
+    return redirect(url_for("admin_requests_page"))
+
+@app.route("/admin/requests")
+@admin_required
+def admin_requests_page():
+    return render_template("admin/requests.html")
+
+@app.route("/admin/schedules")
+@admin_required
+def admin_schedules_page():
+    return render_template("admin/schedules.html")
+
+@app.route("/admin/playlist")
+@admin_required
+def admin_playlist_page():
+    return render_template("admin/playlist.html")
+
+@app.route("/admin/chat")
+@admin_required
+def admin_chat_page():
+    return render_template("admin/chat.html")
+
+@app.route("/admin/ytlinker")
+@admin_required
+def admin_ytlinker_page():
+    return render_template("admin/ytlinker.html")
 
 # ====== API Admin: Requests ======
 @app.route("/api/admin/requests")
